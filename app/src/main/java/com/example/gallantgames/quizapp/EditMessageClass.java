@@ -25,7 +25,8 @@ public class EditMessageClass extends AppCompatActivity {
         String changedMsgText = ((EditText) findViewById(R.id.message)).getText().toString();
         Intent intent = new Intent();
         intent.putExtra(Intents_Constants.INTENT_CHANGED_MESSAGE , changedMsgText);
-        intent.putExtra(Intents_Constants.INTENT_ITEM_POSITION , -1);
+        intent.putExtra(Intents_Constants.INTENT_ITEM_POSITION , position);
+        setResult(Intents_Constants.INTENT_RESULT_CODE_TWO , intent);
         finish();
     }
 }

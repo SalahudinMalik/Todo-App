@@ -1,20 +1,28 @@
 package com.example.gallantgames.quizapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
     ListView listView;
-    ArrayList<String> arrayList;
-    ArrayAdapter<String> arrayAdapter;
-    String msgText;
+    ArrayList<String> arrayList ;
+    ArrayAdapter<String> arrayAdapter  ;
+    String msgText ;
     int position;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 Intent intent = new Intent();
-                intent.setClass(MainActivity.this , EditFieldClass.class);
+                intent.setClass(MainActivity.this , EditMessageClass.class);
                 intent.putExtra(Intents_Constants.INTENT_MESSAGE_DATA,arrayList.get(position).toString());
                 intent.putExtra((Intents_Constants.INTENT_ITEM_POSITION) , position);
                 startActivityForResult(intent , Intents_Constants.INTENT_REQUEST_CODE_TWO);
@@ -36,16 +44,127 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        EditText editText = (EditText)findViewById(R.id.etBox);
+        if(editText.hasFocus())
+        {
+            listView.setVisibility(listView.isShown() ? View.GONE : View.VISIBLE);
+            editText.setGravity(Gravity.TOP);
+        }
+        try {
+
+            //PrintWriter printWriter = new PrintWriter(openFileOutput("todo.txt" , Context.MODE_PRIVATE));
+            //printWriter.write("");
+            Scanner scanner = new Scanner(openFileInput("todo.txt"));
+            while (scanner.hasNextLine()){
+                String data = scanner.nextLine();
+                arrayAdapter.add(data);
+
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
     }
+    public void onStop()
+    {
+        super.onStop();
+        try {
+            PrintWriter printWriter = new PrintWriter(openFileOutput("todo.txt" , Context.MODE_PRIVATE));
+            for(String data : arrayList){
+                printWriter.println(data);
+
+            }
+            printWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        finish();
+
+    }
+    public void onPause(){
+        super.onPause();
+        try {
+            PrintWriter printWriter = new PrintWriter(openFileOutput("todo.txt" , Context.MODE_PRIVATE));
+            for(String data : arrayList){
+                printWriter.println(data);
+
+            }
+            printWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        finish();
+    }
+    public void onBackPressed()
+    {
+        try {
+            PrintWriter printWriter = new PrintWriter(openFileOutput("todo.txt" , Context.MODE_PRIVATE));
+            for(String data : arrayList){
+                printWriter.println(data);
+
+            }
+            printWriter.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        finish();
+
+    }
+
     public void onClick(View v)
     {
-        Intent intent = new Intent();
-        intent.setClass(MainActivity.this , EditFieldClass.class);
-        startActivityForResult(intent , Intents_Constants.INTENT_REQUEST_CODE);
+        boolean insert = true;
+        String etdata = ((EditText)findViewById(R.id.etBox)).getText().toString().trim();
+        try {
+            Scanner scanner = new Scanner(openFileInput("todo.txt"));
+            while (scanner.hasNextLine()){
+                String data = scanner.nextLine();
+                data = data.trim();
+                if(data.equals(etdata)){
+                    Toast.makeText(this ,  "Task is already available ", Toast.LENGTH_LONG).show();
+                    insert=false;
+                    break;
+                }
+                else {
+                    insert = true;
+                }
+            }
+            if(insert == true)
+            {
+                onClickCheck(etdata);
+            }
 
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+    public void onClickCheck(String ebdata){
+        //listView.setVisibility(listView.isShown() ? View.GONE : View.VISIBLE);
+
+
+        if(ebdata.equals(""))
+        {
+            Toast.makeText(this ,  "Please Enter Task...", Toast.LENGTH_LONG).show();
+        }
+        else
+        {
+            arrayList.add(ebdata);
+            arrayAdapter.notifyDataSetChanged();
+        }
+        EditText editText = (EditText)findViewById(R.id.etBox);
+        editText.setText("");
+        //Intent intent = new Intent();
+        // intent.setClass(MainActivity.this , EditFieldClass.class);
+        //startActivityForResult(intent , Intents_Constants.INTENT_REQUEST_CODE);
     }
     public void onActivityResult(int requestCode , int resultCode , Intent data)
     {
+
         if (resultCode == Intents_Constants.INTENT_RESULT_CODE)
         {
             msgText = data.getStringExtra(Intents_Constants.INTENT_MESSAGE_FIELD);
